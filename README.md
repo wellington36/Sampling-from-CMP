@@ -1,1 +1,1 @@
-# Sampling-from-CMP
+# Sampling from CMP
