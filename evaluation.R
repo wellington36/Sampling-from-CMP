@@ -78,10 +78,10 @@ print(tab, quote = FALSE)
 
 
 # --- Plot ----
-lambda <- 1
-nu     <- 1.2
+lambda <- 10
+nu     <- 1
 log_lambda <- log(lambda)
-n_sample <- 5000
+n_sample <- 1000
 
 # --- Simulate from each method ---
 samples_rej   <- rcomp_rejection(n_sample, lambda, nu)
@@ -101,17 +101,42 @@ df_true <- data.frame(x = support, prob = p_true, type = "True PMF")
 df_rej <- data.frame(x = samples_rej, method = "rejection")
 df_dummy <- data.frame(x = samples_dummy, method = "dummy")
 
-# --- Combine into one plot ---
-ggplot() +
-  geom_col(data = df_true, aes(x = x, y = prob), 
-           fill = "grey70", color = "black", width = 0.8, alpha = 0.6) +
-  geom_histogram(data = df_rej, aes(x = x, y = ..count../sum(..count..), 
-                                    fill = "rejection"), 
-                 binwidth = 1, alpha = 0.4, position = "identity") +
-  geom_histogram(data = df_dummy, aes(x = x, y = ..count../sum(..count..), 
-                                      fill = "dummy"), 
-                 binwidth = 1, alpha = 0.4, position = "identity") +
-  scale_fill_manual(values = c("rejection" = "blue", "dummy" = "red")) +
+# Precompute relative frequencies
+# Rejection sampler
+df_rej_freq <- transform(
+  as.data.frame(table(df_rej$x)),
+  x = as.numeric(as.character(Var1)),  # <-- convert correctly
+  freq = Freq / sum(Freq)
+)
+
+# Dummy sampler
+df_dummy_freq <- transform(
+  as.data.frame(table(df_dummy$x)),
+  x = as.numeric(as.character(Var1)),  # <-- convert correctly
+  freq = Freq / sum(Freq)
+)
+
+
+# Add a "Method" column for legend
+df_true$Method <- "True PMF"
+df_rej_freq$Method <- "Rejection"
+df_dummy_freq$Method <- "Dummy"
+
+# Combine all data
+df_plot <- rbind(
+  data.frame(x = df_true$x, y = df_true$prob, Method = df_true$Method),
+  data.frame(x = df_rej_freq$x, y = df_rej_freq$freq, Method = df_rej_freq$Method),
+  data.frame(x = df_dummy_freq$x, y = df_dummy_freq$freq, Method = df_dummy_freq$Method)
+)
+
+# Plot
+library(ggplot2)
+
+ggplot(df_plot, aes(x = x, y = y, color = Method, linetype = Method)) +
+  geom_point(size = 2) +
+  geom_line(size = 1) +
+  scale_color_manual(values = c("True PMF" = "black", "Rejection" = "blue", "Dummy" = "red")) +
+  scale_linetype_manual(values = c("True PMF" = "solid", "Rejection" = "dashed", "Dummy" = "dotted")) +
   labs(title = paste0("COM-Poisson λ=", lambda, ", ν=", nu),
        x = "y", y = "Probability / Relative Frequency") +
   theme_minimal()

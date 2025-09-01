@@ -5,6 +5,7 @@ log_pi_tilde <- function(x, lambda, nu) {
 
 # b_x as in the algorithm
 b_x <- function(x, lambda, nu) {
+  if (x == 0) return(sqrt(exp(log_pi_tilde(1, lambda, nu))) / sqrt(exp(log_pi_tilde(0, lambda, nu))))
   num <- (x + 1) * sqrt(exp(log_pi_tilde(x + 1, lambda, nu)))
   den <- x * sqrt(exp(log_pi_tilde(x, lambda, nu)))
   return(num / den)
@@ -32,9 +33,9 @@ rcomp_rejection <- function(n, lambda, nu) {
   while (i <= n) {
     U <- runif(1, 0, A)
     V <- runif(1, 0, B)
-    candidate <- V / U
-    if (U <= sqrt(exp(log_pi_tilde(floor(candidate), lambda, nu)))) {
-      out[i] <- floor(candidate)
+    candidate <- round(V / U)
+    if (U <= sqrt(exp(log_pi_tilde(candidate, lambda, nu)))) {
+      out[i] <- candidate
       i <- i + 1
     }
   }
