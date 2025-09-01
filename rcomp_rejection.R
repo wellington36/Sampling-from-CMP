@@ -1,6 +1,6 @@
 # Unnormalized COM-Poisson mass
 log_pi_tilde <- function(x, lambda, nu) {
-  x * log(lambda) - nu * lgamma(x)
+  x * log(lambda) - nu * lgamma(x + 1)
 }
 
 # b_x as in the algorithm
