@@ -2,8 +2,9 @@
 library(ggplot2)
 
 #set.seed(123)
+source("com_poisson_pmf.R")
+source("rcomp_exact.R")       # exact sampler
 source("rcomp_rejection.R")   # rejection sampler
-source("com_poisson_pmf.R")   # for com_poisson_log_lpmf
 
 # Dummy sampler for test
 rcomp_dummy <- function(n, lambda, nu) {
@@ -13,18 +14,20 @@ rcomp_dummy <- function(n, lambda, nu) {
 # --- Register methods in a list ---
 methods <- list(
   rejection = rcomp_rejection,
+  exact     = rcomp_exact,
   dummy     = rcomp_dummy
 )
 
 # --- Benchmark wrapper: return multiple metrics ---
-benchmark_method <- function(method_fun, n_iter = 20, n_sample = 2000, eps = 1e-12) {
+benchmark_method <- function(method_fun, n_iter = 20, n_sample = 5000, eps = 1e-12) {
   times  <- numeric(n_iter)
   pvals  <- numeric(n_iter)
   diffs  <- numeric(n_iter)
   
   for (i in seq_len(n_iter)) {
-    lambda_i <- runif(1, 1, 10)
+    lambda_i <- runif(1, 0.5, 10)
     nu_i     <- runif(1, 0.5, 2)
+    #nu_i <- 1  # Poisson
     log_lambda <- log(lambda_i)
     
     # --- timing + sampling ---
@@ -78,17 +81,18 @@ print(tab, quote = FALSE)
 
 
 # --- Plot ----
-lambda <- 10
-nu     <- 1
+lambda <- 2
+nu     <- 0.9
 log_lambda <- log(lambda)
-n_sample <- 1000
+n_sample <- 4000
 
 # --- Simulate from each method ---
 samples_rej   <- rcomp_rejection(n_sample, lambda, nu)
+samples_exa   <- rcomp_exact(n_sample, lambda, nu)
 samples_dummy <- rcomp_dummy(n_sample, lambda, nu)
 
 # --- True pmf (truncate support at reasonable size) ---
-K <- max(c(samples_rej, samples_dummy)) + 10
+K <- max(c(samples_rej, samples_exa, samples_dummy)) + 10
 support <- 0:K
 log_p <- sapply(support, function(y)
   com_poisson_log_lpmf(y, log_lambda, nu, 1e-12))
@@ -99,12 +103,20 @@ df_true <- data.frame(x = support, prob = p_true, type = "True PMF")
 
 # --- Empirical histograms (convert to relative frequency) ---
 df_rej <- data.frame(x = samples_rej, method = "rejection")
+df_exa <- data.frame(x = samples_exa, method = "exact")
 df_dummy <- data.frame(x = samples_dummy, method = "dummy")
 
 # Precompute relative frequencies
 # Rejection sampler
 df_rej_freq <- transform(
   as.data.frame(table(df_rej$x)),
+  x = as.numeric(as.character(Var1)),  # <-- convert correctly
+  freq = Freq / sum(Freq)
+)
+
+# Exact sampler
+df_exa_freq <- transform(
+  as.data.frame(table(df_exa$x)),
   x = as.numeric(as.character(Var1)),  # <-- convert correctly
   freq = Freq / sum(Freq)
 )
@@ -120,12 +132,14 @@ df_dummy_freq <- transform(
 # Add a "Method" column for legend
 df_true$Method <- "True PMF"
 df_rej_freq$Method <- "Rejection"
+df_exa_freq$Method <- "Exact"
 df_dummy_freq$Method <- "Dummy"
 
 # Combine all data
 df_plot <- rbind(
   data.frame(x = df_true$x, y = df_true$prob, Method = df_true$Method),
   data.frame(x = df_rej_freq$x, y = df_rej_freq$freq, Method = df_rej_freq$Method),
+  data.frame(x = df_exa_freq$x, y = df_exa_freq$freq, Method = df_exa_freq$Method),
   data.frame(x = df_dummy_freq$x, y = df_dummy_freq$freq, Method = df_dummy_freq$Method)
 )
 
@@ -135,8 +149,8 @@ library(ggplot2)
 ggplot(df_plot, aes(x = x, y = y, color = Method, linetype = Method)) +
   geom_point(size = 2) +
   geom_line(size = 1) +
-  scale_color_manual(values = c("True PMF" = "black", "Rejection" = "blue", "Dummy" = "red")) +
-  scale_linetype_manual(values = c("True PMF" = "solid", "Rejection" = "dashed", "Dummy" = "dotted")) +
+  scale_color_manual(values = c("True PMF" = "black", "Rejection" = "blue", "Exact" = "green", "Dummy" = "red")) +
+  scale_linetype_manual(values = c("True PMF" = "solid", "Rejection" = "dashed", "Exact" = "dashed", "Dummy" = "dotted")) +
   labs(title = paste0("COM-Poisson λ=", lambda, ", ν=", nu),
        x = "y", y = "Probability / Relative Frequency") +
   theme_minimal()
