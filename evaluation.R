@@ -1,7 +1,7 @@
 # --- Setup ---
 library(ggplot2)
 
-#set.seed(123)
+#set.seed(121)
 source("com_poisson_pmf.R")
 source("rcomp_exact.R")       # exact sampler
 source("rcomp_rejection.R")   # rejection sampler
@@ -19,7 +19,7 @@ methods <- list(
 )
 
 # --- Benchmark wrapper: return multiple metrics ---
-benchmark_method <- function(method_fun, n_iter = 20, n_sample = 5000, eps = 1e-12) {
+benchmark_method <- function(method_fun, n_iter = 200, n_sample = 30000, eps = 1e-12) {
   times  <- numeric(n_iter)
   pvals  <- numeric(n_iter)
   diffs  <- numeric(n_iter)
@@ -81,8 +81,8 @@ print(tab, quote = FALSE)
 
 
 # --- Plot ----
-lambda <- 2
-nu     <- 0.9
+lambda <- 5
+nu     <- 2
 log_lambda <- log(lambda)
 n_sample <- 4000
 
@@ -148,7 +148,7 @@ library(ggplot2)
 
 ggplot(df_plot, aes(x = x, y = y, color = Method, linetype = Method)) +
   geom_point(size = 2) +
-  geom_line(size = 1) +
+  geom_line(size = 0.5) +
   scale_color_manual(values = c("True PMF" = "black", "Rejection" = "blue", "Exact" = "green", "Dummy" = "red")) +
   scale_linetype_manual(values = c("True PMF" = "solid", "Rejection" = "dashed", "Exact" = "dashed", "Dummy" = "dotted")) +
   labs(title = paste0("COM-Poisson λ=", lambda, ", ν=", nu),

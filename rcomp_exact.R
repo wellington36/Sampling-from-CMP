@@ -5,31 +5,42 @@ rcomp_exact <- function(n, lambda, nu) {
   eps <- 1e-12
   log_lambda <- log(lambda)
   
+  # eval blindly until the maximum
+  k <- 1
+  a <- c(exp(log_k_term(log_lambda, nu, k)))
+  
+  while (a[k] < exp(log_k_term(log_lambda, nu, k+1)) || k < 2) {
+    k <- k + 1
+    a <- append(a, exp(log_k_term(log_lambda, nu, k)))
+  }
+  
+  maximum <- k
+  
   out <- numeric(n)
   i <- 1
   while (i <= n) {
     z <- runif(1, 0, 1)
-    k <- 1
+    k <- maximum
     j <- 1
     
-    a1 <- exp(log_k_term(log_lambda, nu, k))
-    a2 <- exp(log_k_term(log_lambda, nu, k+1))
-  
-    a <- c(a1)
+
     F_j <- sum(a[1:j])
     F_k <- sum(a[1:k])
   
     l_k <- F_k
-    u_k <- F_k + a2 + a2 * (1 - a2/a1)**(-1)
+    u_k <- F_k + a[k] * (1 - a[k]/a[k-1])**(-1)
  
     F_j_k_lower <- F_j / u_k
     F_j_k_upper <- F_j / l_k
+
 
     while (F_j_k_lower < z) {
       if (F_j_k_lower < z && z < F_j_k_upper) {
         k <- k + 1
       
-        a <- append(a, exp(log_k_term(log_lambda, nu, k)))
+        if (length(a) < k) {
+          a <- append(a, exp(log_k_term(log_lambda, nu, k)))
+        }
         F_k <- sum(a[1:k])
       
         l_k <- F_k
@@ -51,3 +62,5 @@ rcomp_exact <- function(n, lambda, nu) {
   }
   return(out)
 }
+
+rcomp_exact(1, 2, 0.1)
