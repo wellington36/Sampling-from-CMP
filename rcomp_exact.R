@@ -1,58 +1,68 @@
 source("com_poisson_pmf.R")
 
+log1mexp <- function(d) {
+  # computes log(1 - exp(d)) for d <= 0
+  stopifnot(d <= 0)
+  
+  if (d <= -log(2)) {
+    # safe because exp(d) is small enough
+    return(log1p(-exp(d)))
+  } else {
+    # use expm1 for precision near 0
+    return(log(-expm1(d)))
+  }
+}
+
 # Exact sampler for n samples
 rcomp_exact <- function(n, lambda, nu) {
-  eps <- 1e-12
+  eps <- 1e-8
   log_lambda <- log(lambda)
   
   # eval blindly until the maximum
   k <- 1
   a <- c(log_k_term(log_lambda, nu, k))
   
-  while ((a[k] < log_k_term(log_lambda, nu, k+1)) || (k < 2)) {
+  while ((k < (floor(lambda^(1/nu)) + 2))) {
     k <- k + 1
     a <- append(a, log_k_term(log_lambda, nu, k))
   }
   
-  maximum <- k
-  
   out <- numeric(n)
   i <- 1
   while (i <= n) {
-    z <- runif(1, 0, 1)
-    k <- maximum
+    z <- runif(1)
+    logz <- log(z)
     j <- 1
 
-    F_j <- exp(logsumexp(a[1:j]))
-    F_k <- exp(logsumexp(a[1:k]))
+    log_F_j <- logsumexp(a[1:j])
+    log_F_k <- logsumexp(a[1:k])
 
-    l_k <- F_k
-    u_k <- F_k + exp(a[k]) * (1 - exp(a[k])/exp(a[k-1]))**(-1)
+    log_l_k <- log_F_k
+    log_u_k <- logsumexp(c(log_F_k, a[k] - log1mexp(a[k] - a[k-1])))
+
  
-    F_j_k_lower <- F_j / u_k
-    F_j_k_upper <- F_j / l_k
+    log_F_j_k_lower <- log_F_j - log_u_k
+    log_F_j_k_upper <- log_F_j - log_l_k
 
-    while (F_j_k_lower < z) {
-      if (F_j_k_lower < z && z < F_j_k_upper) {
+    while (log_F_j_k_lower < logz) {
+      if (log_F_j_k_lower < logz && logz < log_F_j_k_upper) {
         k <- k + 1
       
-        if (length(a) < k) {
-          a <- append(a, log_k_term(log_lambda, nu, k))
-        }
-        F_k <- exp(logsumexp(a[1:k]))
+        a <- append(a, log_k_term(log_lambda, nu, k))
+        log_F_k <- logsumexp(a[1:k])
       
-        l_k <- F_k
-        u_k <- F_k + exp(a[k]) * (1 - exp(a[k])/exp(a[k-1]))**(-1)
+        log_l_k <- log_F_k
+        log_u_k <- logsumexp(c(log_F_k, a[k] - log1mexp(a[k] - a[k-1])))
       
-        F_j_k_lower <- F_j / u_k
-        F_j_k_upper <- F_j / l_k
-      } else if (z > F_j_k_upper) {
+        log_F_j_k_lower <- log_F_j - log_u_k
+        log_F_j_k_upper <- log_F_j - log_l_k
+      } else if (logz > log_F_j_k_upper) {
         j <- j + 1
       
-        F_j <- exp(logsumexp(a[1:j]))
+        log_F_j <- logsumexp(a[1:j])
       
-        F_j_k_lower <- F_j / u_k
-        F_j_k_upper <- F_j / l_k
+        log_F_j_k_lower <- log_F_j - log_u_k
+        log_F_j_k_upper <- log_F_j - log_l_k
       }
     }
     
@@ -62,4 +72,4 @@ rcomp_exact <- function(n, lambda, nu) {
   return(out)
 }
 
-rcomp_exact(1, 20, 0.5)
+#rcomp_exact(10, 20, 0.4)
