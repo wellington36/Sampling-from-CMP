@@ -3,16 +3,17 @@ source("com_poisson_pmf.R")
 # Auxiliar functions
 log_B <- function(mu, nu, p = 1) {
   if (nu < 1) {
-    a <- floor(mu / (1 - p)^(1/nu))
-    lresult <- (nu * a) * log(mu)
-      - a * log(1 - p) - nu * lgamma(a + 1) - log(p)
-    return(lresult)
+    a_star <- mu / (1 - p)^(1/nu)
+    candidates <- c(floor(a_star), ceiling(a_star))
+    vals <- sapply(candidates, function(a) {
+      (nu * a) * log(mu) - a * log(1 - p) - nu * lgamma(a + 1) - log(p)
+    })
+    return(max(vals))
   } else {
-    lresult <- (nu - 1) * (floor(mu) * log(mu) - lgamma(floor(mu) + 1))
-    
-    return(lresult)
+    return((nu - 1) * (floor(mu) * log(mu) - lgamma(floor(mu) + 1)))
   }
 }
+
 
 rcomp_rejection_benson <- function(n, lambda, nu) {
   mu <- lambda^(1/nu)
