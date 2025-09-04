@@ -37,12 +37,12 @@ rcomp_exact <- function(n, lambda, nu) {
     log_F_j <- logsumexp(a[1:j])
     log_F_k <- logsumexp(a[1:k])
 
-    log_l_k <- log_F_k
-    log_u_k <- logsumexp(c(log_F_k, a[k] - log1mexp(a[k] - a[k-1])))
+    log_L_k <- log_F_k
+    log_U_k <- logsumexp(c(log_F_k, a[k] - log1mexp(a[k] - a[k-1])))
 
  
-    log_F_j_k_lower <- log_F_j - log_u_k
-    log_F_j_k_upper <- log_F_j - log_l_k
+    log_F_j_k_lower <- log_F_j - log_U_k
+    log_F_j_k_upper <- log_F_j - log_L_k
 
     while (log_F_j_k_lower < logz) {
       if (log_F_j_k_lower < logz && logz < log_F_j_k_upper) {
@@ -51,18 +51,18 @@ rcomp_exact <- function(n, lambda, nu) {
         a <- append(a, log_k_term(log_lambda, nu, k))
         log_F_k <- logsumexp(a[1:k])
       
-        log_l_k <- log_F_k
-        log_u_k <- logsumexp(c(log_F_k, a[k] - log1mexp(a[k] - a[k-1])))
+        log_L_k <- log_F_k
+        log_U_k <- logsumexp(c(log_F_k, a[k] - log1mexp(a[k] - a[k-1])))
       
-        log_F_j_k_lower <- log_F_j - log_u_k
-        log_F_j_k_upper <- log_F_j - log_l_k
+        log_F_j_k_lower <- log_F_j - log_U_k
+        log_F_j_k_upper <- log_F_j - log_L_k
       } else if (logz > log_F_j_k_upper) {
         j <- j + 1
       
         log_F_j <- logsumexp(a[1:j])
       
-        log_F_j_k_lower <- log_F_j - log_u_k
-        log_F_j_k_upper <- log_F_j - log_l_k
+        log_F_j_k_lower <- log_F_j - log_U_k
+        log_F_j_k_upper <- log_F_j - log_L_k
       }
     }
     
