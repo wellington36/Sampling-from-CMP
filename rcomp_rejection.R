@@ -1,14 +1,16 @@
-# Unnormalized COM-Poisson mass
+# Unnormalized COM-Poisson log-mass
 log_pi_tilde <- function(x, lambda, nu) {
   x * log(lambda) - nu * lgamma(x + 1)
 }
 
-# b_x as in the algorithm
+# b_x in log-space
 b_x <- function(x, lambda, nu) {
-  if (x == 0) return(sqrt(exp(log_pi_tilde(1, lambda, nu))) / sqrt(exp(log_pi_tilde(0, lambda, nu))))
-  num <- (x + 1) * sqrt(exp(log_pi_tilde(x + 1, lambda, nu)))
-  den <- x * sqrt(exp(log_pi_tilde(x, lambda, nu)))
-  return(num / den)
+  if (x == 0) {
+    return(exp(0.5 * (log_pi_tilde(1, lambda, nu) - log_pi_tilde(0, lambda, nu))))
+  }
+  log_num <- log(x + 1) + 0.5 * log_pi_tilde(x + 1, lambda, nu)
+  log_den <- log(x)     + 0.5 * log_pi_tilde(x, lambda, nu)
+  return(exp(log_num - log_den))
 }
 
 # Rejection sampler for n samples
@@ -24,8 +26,12 @@ rcomp_rejection <- function(n, lambda, nu) {
     }
   }
   
-  A <- sqrt(exp(log_pi_tilde(floor(lambda^(1 / nu)), lambda, nu)))
-  B <- x_star * sqrt(exp(log_pi_tilde(x_star, lambda, nu)))
+  x0 <- floor(lambda^(1 / nu))
+  logA <- 0.5 * log_pi_tilde(x0, lambda, nu)
+  A <- exp(logA)
+  
+  logB <- log(x_star) + 0.5 * log_pi_tilde(x_star, lambda, nu)
+  B <- exp(logB)
   
   # ---- Simulation step ----
   out <- numeric(n)
@@ -34,7 +40,8 @@ rcomp_rejection <- function(n, lambda, nu) {
     U <- runif(1, 0, A)
     V <- runif(1, 0, B)
     candidate <- round(V / U)
-    if (U <= sqrt(exp(log_pi_tilde(candidate, lambda, nu)))) {
+    
+    if (log(U) <= 0.5 * log_pi_tilde(candidate, lambda, nu)) {
       out[i] <- candidate
       i <- i + 1
     }
