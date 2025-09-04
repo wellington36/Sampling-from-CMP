@@ -42,7 +42,6 @@ rcomp_rejection_benson <- function(n, lambda, nu) {
       y_sim <- rgeom(1, p)
       lterm <- y_sim * log(mu) - lgamma(y_sim + 1)
       log_alpha <- nu * lterm - log_b - log(p) - y_sim * log(1 - p)
-      print(exp(log_alpha))
       u <- runif(1, 0, 1)
 
       if (log(u) < log_alpha) {
