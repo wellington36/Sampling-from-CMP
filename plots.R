@@ -1,21 +1,21 @@
 source("evaluation.R")
 
 # --- Plot ----
-#lambda <- runif(1, 0.5, 5)
-#nu     <- runif(1, 0.5, 2)
-lambda <- 3.87
-nu     <- 0.62
+lambda <- runif(1, 0.5, 10)
+nu     <- runif(1, 0.5, 2)
+#lambda <- 10
+#nu     <- 0.30
 log_lambda <- log(lambda)
-n_sample <- 2000
+n_sample <- 4000
 
 # --- Simulate from each method ---
 samples_rej_ben <- rcomp_rejection_benson(n_sample, lambda, nu)
-samples_rej     <- rcomp_rejection(n_sample, lambda, nu)
+samples_rou     <- rcomp_rou(n_sample, lambda, nu)
 samples_exa     <- rcomp_exact(n_sample, lambda, nu)
 samples_dummy   <- rcomp_dummy(n_sample, lambda, nu)
 
 # --- True pmf (truncate support at reasonable size) ---
-K <- max(c(samples_rej, samples_rej_ben, samples_exa, samples_dummy)) + 10
+K <- max(c(samples_rou, samples_rej_ben, samples_exa, samples_dummy)) + 10
 support <- 0:K
 log_p <- sapply(support, function(y)
   com_poisson_log_lpmf(y, log_lambda, nu, 1e-12))
@@ -25,15 +25,15 @@ p_true <- p_true / sum(p_true)
 df_true <- data.frame(x = support, prob = p_true, type = "True PMF")
 
 # --- Empirical histograms (convert to relative frequency) ---
-df_rej     <- data.frame(x = samples_rej, method = "rejection")
+df_rou     <- data.frame(x = samples_rou, method = "rejection")
 df_rej_ben <- data.frame(x = samples_rej_ben, method = "rejection benson")
 df_exa     <- data.frame(x = samples_exa, method = "exact")
 df_dummy   <- data.frame(x = samples_dummy, method = "dummy")
 
 # Precompute relative frequencies
-# Rejection sampler
-df_rej_freq <- transform(
-  as.data.frame(table(df_rej$x)),
+# RoU sampler
+df_rou_freq <- transform(
+  as.data.frame(table(df_rou$x)),
   x = as.numeric(as.character(Var1)),  # <-- convert correctly
   freq = Freq / sum(Freq)
 )
@@ -62,7 +62,7 @@ df_dummy_freq <- transform(
 
 # Add a "Method" column for legend
 df_true$Method <- "True PMF"
-df_rej_freq$Method <- "Rejection"
+df_rou_freq$Method <- "Rejection RoU"
 df_rej_ben_freq$Method <- "Rejection Benson"
 df_exa_freq$Method <- "Exact"
 df_dummy_freq$Method <- "Poisson"
@@ -70,7 +70,7 @@ df_dummy_freq$Method <- "Poisson"
 # Combine all data
 df_plot <- rbind(
   data.frame(x = df_true$x, y = df_true$prob, Method = df_true$Method),
-  data.frame(x = df_rej_freq$x, y = df_rej_freq$freq, Method = df_rej_freq$Method),
+  data.frame(x = df_rou_freq$x, y = df_rou_freq$freq, Method = df_rou_freq$Method),
   data.frame(x = df_rej_ben_freq$x, y = df_rej_ben_freq$freq, Method = df_rej_ben_freq$Method),
   data.frame(x = df_exa_freq$x, y = df_exa_freq$freq, Method = df_exa_freq$Method),
   data.frame(x = df_dummy_freq$x, y = df_dummy_freq$freq, Method = df_dummy_freq$Method)
@@ -82,8 +82,8 @@ library(ggplot2)
 ggplot(df_plot, aes(x = x, y = y, color = Method, linetype = Method)) +
   geom_point(size = 2) +
   geom_line(size = 0.5) +
-  scale_color_manual(values = c("True PMF" = "black", "Rejection" = "blue", "Rejection Benson" = "orange", "Exact" = "green", "Poisson" = "red")) +
-  scale_linetype_manual(values = c("True PMF" = "solid", "Rejection" = "dashed", "Rejection Benson" = "dashed", "Exact" = "dashed", "Poisson" = "dotted")) +
-  labs(title = paste0("COM-Poisson λ=", lambda, ", ν=", nu),
+  scale_color_manual(values = c("True PMF" = "black", "Rejection RoU" = "blue", "Rejection Benson" = "orange", "Exact" = "green", "Poisson" = "red")) +
+  scale_linetype_manual(values = c("True PMF" = "solid", "Rejection RoU" = "dashed", "Rejection Benson" = "dashed", "Exact" = "dashed", "Poisson" = "dotted")) +
+  labs(title = paste0("COM-Poisson λ=", sprintf("%.2f", lambda), ", ν=", sprintf("%.2f", nu)),
        x = "y", y = "Probability / Relative Frequency") +
   theme_minimal()

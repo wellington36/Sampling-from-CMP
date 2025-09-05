@@ -4,7 +4,7 @@ library(ggplot2)
 #set.seed(121)
 source("com_poisson_pmf.R")
 source("rcomp_exact.R")       # exact sampler
-source("rcomp_rejection.R")   # rejection sampler
+source("rcomp_rou.R")   # rejection sampler
 source("rcomp_rejection_benson.R") # rejection sampler
 
 # Dummy sampler for test
@@ -14,7 +14,7 @@ rcomp_dummy <- function(n, lambda, nu) {
 
 # --- Register methods in a list ---
 methods <- list(
-  rejection        = rcomp_rejection,
+  rou        = rcomp_rou,
   rejection_benson = rcomp_rejection_benson,
   exact            = rcomp_exact,
   dummy            = rcomp_dummy
