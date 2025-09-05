@@ -15,7 +15,6 @@ log1mexp <- function(d) {
 
 # Exact sampler for n samples
 rcomp_exact <- function(n, lambda, nu) {
-  eps <- 1e-8
   log_lambda <- log(lambda)
   
   # eval blindly until the maximum
