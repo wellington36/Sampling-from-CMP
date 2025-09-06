@@ -1,14 +1,25 @@
-source("evaluation.R")
+#set.seed(121)
+source("com_poisson_pmf.R")
+source("rcomp_exact.R")       # exact sampler
+source("rcomp_rou.R")   # RoU sampler
+source("rcomp_rejection_benson.R") # rejection sampler
+
+# Dummy sampler for test
+rcomp_dummy <- function(n, lambda, nu) {
+  rpois(n, lambda)  # just Poisson as placeholder
+}
 
 # --- Choose methods to use ---
-methods_to_use <- c("rou", "rej_ben", "exa", "dummy")  
+methods_to_use <- c("rou", "rej_ben", "exa")  
 # options: "rou", "rej_ben", "exa", "dummy"
 
 # --- Parameters ---
-lambda <- runif(1, 0.5, 10)
-nu     <- runif(1, 0.5, 2)
+#lambda <- runif(1, 0.5, 10)
+#nu     <- runif(1, 0.5, 2)
+lambda <- 2
+nu <- 0.5
 log_lambda <- log(lambda)
-n_sample <- 4000
+n_sample <- 10000
 
 # --- Storage ---
 samples_list <- list()
@@ -93,3 +104,57 @@ ggplot(df_plot, aes(x = x, y = y, color = Method, linetype = Method)) +
                       ", ν=", sprintf("%.2f", nu)),
        x = "y", y = "Probability / Relative Frequency") +
   theme_minimal()
+
+library(dplyr)
+
+# Merge with true pmf
+df_diff <- df_plot %>%
+  left_join(df_true %>% select(x, y_true = y), by = "x") %>%
+  mutate(diff = y - y_true) %>%
+  filter(Method != "True PMF")
+
+ggplot(df_diff, aes(x = x, y = diff, color = Method)) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_point(size = 2) +
+  geom_line() +
+  labs(
+    title = paste0("Deviation from True COM-Poisson PMF (λ=", sprintf("%.2f", lambda), 
+                   ", ν=", sprintf("%.2f", nu), ")"),
+    x = "y", y = "Empirical - True"
+  ) +
+  theme_minimal()
+
+
+df_ratio <- df_plot %>%
+  left_join(df_true %>% select(x, y_true = y), by = "x") %>%
+  mutate(ratio = y / y_true) %>%
+  filter(Method != "True PMF")
+
+ggplot(df_ratio, aes(x = x, y = ratio, color = Method)) +
+  geom_hline(yintercept = 1, linetype = "dashed") +
+  geom_point(size = 2) +
+  geom_line() +
+  labs(
+    title = paste0("Relative Frequency / True PMF (λ=", sprintf("%.2f", lambda), 
+                   ", ν=", sprintf("%.2f", nu), ")"),
+    x = "y", y = "Ratio"
+  ) +
+  theme_minimal()
+
+
+
+kl_div <- df_plot %>%
+  # join to get y_true from df_true
+  left_join(df_true %>% select(x, y_true = y), by = "x") %>%
+  filter(Method != "True PMF") %>%
+  group_by(Method) %>%
+  summarise(
+    KL = sum(ifelse(y > 0 & y_true > 0, y * log(y / y_true), 0)),
+    .groups = "drop"
+  )
+
+ggplot(kl_div, aes(x = Method, y = KL, fill = Method)) +
+  geom_col() +
+  labs(title = "KL Divergence from True PMF", y = "KL", x = "") +
+  theme_minimal()
+

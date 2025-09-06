@@ -24,7 +24,7 @@ benchmark_method <- function(method_fun, n_iter = 200, n_sample = 10000, eps = 1
   diffs  <- numeric(n_iter)
   
   for (i in seq_len(n_iter)) {
-    lambda_i <- runif(1, 0.1, 20)
+    lambda_i <- runif(1, 0.5, 20)
     nu_i     <- runif(1, 0.5, 5)
     #nu_i <- 1  # Poisson
     log_lambda <- log(lambda_i)
