@@ -1,10 +1,7 @@
-# --- Setup ---
-library(ggplot2)
-
 #set.seed(121)
 source("com_poisson_pmf.R")
 source("rcomp_exact.R")       # exact sampler
-source("rcomp_rou.R")   # rejection sampler
+source("rcomp_rou.R")   # RoU sampler
 source("rcomp_rejection_benson.R") # rejection sampler
 
 # Dummy sampler for test
@@ -21,14 +18,14 @@ methods <- list(
 )
 
 # --- Benchmark wrapper: return multiple metrics ---
-benchmark_method <- function(method_fun, n_iter = 20, n_sample = 2000, eps = 1e-8) {
+benchmark_method <- function(method_fun, n_iter = 200, n_sample = 10000, eps = 1e-8) {
   times  <- numeric(n_iter)
   pvals  <- numeric(n_iter)
   diffs  <- numeric(n_iter)
   
   for (i in seq_len(n_iter)) {
-    lambda_i <- runif(1, 0.5, 5)
-    nu_i     <- runif(1, 0.5, 2)
+    lambda_i <- runif(1, 0.1, 20)
+    nu_i     <- runif(1, 0.5, 5)
     #nu_i <- 1  # Poisson
     log_lambda <- log(lambda_i)
     
