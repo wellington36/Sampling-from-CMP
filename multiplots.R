@@ -1,3 +1,31 @@
+library(dplyr)
+library(ggplot2)
+library(patchwork)
+
+
+#set.seed(121)
+source("com_poisson_pmf.R")
+source("rcomp_exact.R")       # exact sampler
+source("rcomp_rou.R")   # RoU sampler
+source("rcomp_rejection_benson.R") # rejection sampler
+
+# Dummy sampler for test
+rcomp_dummy <- function(n, lambda, nu) {
+  rpois(n, lambda)  # just Poisson as placeholder
+}
+
+# --- Choose methods to use ---
+methods_to_use <- c("rou", "rej_ben", "exa")  
+# options: "rou", "rej_ben", "exa", "dummy"
+
+# --- Parameters ---
+#lambda <- runif(1, 0.5, 10)
+#nu     <- runif(1, 0.5, 2)
+lambda <- 2
+nu <- 0.5
+log_lambda <- log(lambda)
+n_sample <- 10000
+
 # --- Global style maps ---
 method_colors <- c(
   "True PMF" = "black",
@@ -55,8 +83,7 @@ make_plot_pair <- function(nu, methods_to_use) {
     geom_line(size = 0.5) +
     labs(title = paste0("λ=", lambda, ", ν=", nu, " (PMF)"),
          x = "y", y = "Probability / Rel. Frequency") +
-    theme_minimal() +
-    theme(legend.position = "none")   # 🚨 remove legends here
+    theme_minimal()
   
   # --- Deviation plot ---
   df_diff <- df_plot %>%
@@ -64,14 +91,13 @@ make_plot_pair <- function(nu, methods_to_use) {
     mutate(diff = y - y_true) %>%
     filter(Method != "True PMF")
   
-  p2 <- ggplot(df_diff, aes(x = x, y = diff, color = Method)) +
+  p2 <- ggplot(df_diff, aes(x = x, y = diff, color = Method, linetype = Method)) +
     geom_hline(yintercept = 0, linetype = "dashed") +
     geom_point(size = 2) +
     geom_line() +
     labs(title = paste0("λ=", lambda, ", ν=", nu, " (Deviation)"),
          x = "y", y = "Empirical - True") +
-    theme_minimal() +
-    theme(legend.position = "none")   # 🚨 remove legends here
+    theme_minimal()
   
   p1 + p2
 }
@@ -84,19 +110,18 @@ plots <- list(
 )
 
 final_plot <- (plots[[1]] / plots[[2]] / plots[[3]]) +
-  plot_layout(guides = "collect") & 
+  plot_layout(guides = "collect") &  # collect all legends into one
   scale_color_manual(
     values = method_colors,
     breaks = c("True PMF", "Rejection RoU", "Rejection Benson", "Exact", "Poisson")
-  ) & 
+  ) &
   scale_linetype_manual(
     values = method_linetypes,
     breaks = c("True PMF", "Rejection RoU", "Rejection Benson", "Exact", "Poisson")
-  ) & 
+  ) &
   theme(
     legend.position = "top",
     legend.direction = "horizontal",
-    legend.box = "horizontal",
     legend.title = element_blank(),
     legend.justification = "center"
   )
