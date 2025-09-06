@@ -20,3 +20,9 @@ $$
 | Time(s)           | 0.0303    | 0.0139           | 0.0724 | 0.0003 |
 | Chi2 p-val        | 0.2808    | 0.9500           | 1.0000 | 0.9500 |
 | \|Mean - TrueMean\| | 0.1772    | 0.0311           | 0.0324 | 0.0335 |
+
+
+## PMF comparation
+Run `multiplots.R` for
+
+<img width="1291" height="785" alt="image" src="https://github.com/user-attachments/assets/c2a2aede-601b-4dbb-8feb-ee64792fe4a1" />
