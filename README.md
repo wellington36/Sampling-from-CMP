@@ -6,7 +6,7 @@ $$
 $$
 
 ### Comparison methods
-|                   | rejection | rejection_benson | exact  |
+|                   | rejection RoU | rejection_benson | exact  |
 |-------------------|-----------|------------------|--------|
 | Time(s)           | 0.0278    | 0.3576           | 0.0700 |
 | Chi2 p-val        | 0.1864    | 0.7500           | 1.0000 |
@@ -15,7 +15,7 @@ $$
 
 ### Comparison with $\nu = 1$
 
-|                   | rejection | rejection_benson | exact  | poisson (rpois)  |
+|                   | rejection RoU | rejection_benson | exact  | poisson (rpois)  |
 |-------------------|-----------|------------------|--------|--------|
 | Time(s)           | 0.0303    | 0.0139           | 0.0724 | 0.0003 |
 | Chi2 p-val        | 0.2808    | 0.9500           | 1.0000 | 0.9500 |
