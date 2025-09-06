@@ -1,19 +1,29 @@
 # Sampling from CMP
-Considering
+First we sample
 
 $$
-  \lambda \sim Unif(0.5, 5) \quad \text{ and } \quad \nu \sim Unif(0.5, 2)
+\lambda_i \sim \mathrm{Unif}\left(\tfrac{1}{2}, 20 \right), \quad
+\nu_i \sim \mathrm{Unif}\left(\tfrac{1}{2}, 5 \right)
 $$
 
-### Comparison methods
+for $i = 1, 2, \cdots, 200$, then we sample two sets of variables. For each method we sample
+
+$$
+X_{i,j} \sim \mathrm{CMP}(\lambda_i, \nu_i), \quad
+Y_{i,j} \sim \mathrm{CMP}(\lambda_i, 1)
+$$
+
+for $i = 1, 2, \cdots, 200$ and $j = 1, 2, \cdots, 10000$.
+
+We show the results of $X_{i,j}$ for the mean time in seconds, the mean chi-square test, and the mean error:
+
 |                   | rejection RoU | rejection_benson | exact  |
 |-------------------|-----------|------------------|--------|
 | Time(s)           | 0.0278    | 0.3576           | 0.0700 |
 | Chi2 p-val        | 0.1864    | 0.7500           | 1.0000 |
 | \|Mean - TrueMean\| | 0.2233    | 4.0772           | 0.0309 |
 
-
-### Comparison with $\nu = 1$
+And we show the equivalent result but for $Y_{i,j}$, comparing also with the `rpois` function from the R package (since $\nu = 1$ corresponds to the Poisson distribution):
 
 |                   | rejection RoU | rejection_benson | exact  | poisson (rpois)  |
 |-------------------|-----------|------------------|--------|--------|
